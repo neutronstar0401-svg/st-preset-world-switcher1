@@ -228,9 +228,9 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-              预设与世界书智能切换管家
+              预设条目自动切换
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30">
-                v1.1.0 完美自适应居中版
+                SillyTavern 扩展
               </span>
             </h1>
           </div>
@@ -269,15 +269,16 @@ export default function App() {
 
         {/* 快捷按钮 */}
         <div className="flex items-center gap-2">
-          {!isModalOpen && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition flex items-center gap-1.5 shadow"
-            >
-              <Zap className="w-3.5 h-3.5" />
-              重新呼出居中大弹窗
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setIsModalOpen(true);
+              showToast('已唤出居中「方案管理」界面');
+            }}
+            className="px-3.5 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition flex items-center gap-1.5 shadow"
+          >
+            <Zap className="w-3.5 h-3.5" />
+            方案管理
+          </button>
         </div>
       </header>
 
@@ -383,7 +384,7 @@ export default function App() {
                         ⚡
                       </div>
                       <span className="font-bold text-sm tracking-tight truncate">
-                        预设与世界书智能切换管家
+                        预设条目自动切换 - 方案管理
                       </span>
                     </div>
 
@@ -960,20 +961,51 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <div className="text-center p-8 bg-[#14161f] border border-white/10 rounded-2xl">
-                  <div className="w-12 h-12 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-3">
-                    <Zap className="w-6 h-6" />
+                <div className="w-full max-w-md p-6 bg-[#14161f] border border-white/10 rounded-2xl shadow-2xl flex flex-col gap-4">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <span className="text-xs font-semibold text-slate-400">酒馆右侧插件管理预览 (Extensions Drawer)</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/15 text-green-400 font-mono">已就绪</span>
                   </div>
-                  <h3 className="font-bold text-base text-white">弹窗已关闭</h3>
-                  <p className="text-xs text-slate-400 mt-1 mb-4">
-                    您可以点击下方按钮重新唤出居中管理弹窗。
+
+                  {/* 模拟酒馆内的扩展抽屉 */}
+                  <div className="border border-white/10 rounded-xl bg-black/40 overflow-hidden">
+                    <div className="px-3.5 py-3 bg-white/5 border-b border-white/10 flex items-center justify-between cursor-pointer">
+                      <b className="text-xs text-white flex items-center gap-2">
+                        <span>⚡</span>
+                        <span>预设条目自动切换</span>
+                      </b>
+                      <span className="text-slate-400 text-xs">▼</span>
+                    </div>
+                    <div className="p-3.5 flex flex-col gap-3">
+                      <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={globalEnabled}
+                          onChange={e => {
+                            setGlobalEnabled(e.target.checked);
+                            showToast(e.target.checked ? '已开启全局自动切换' : '已停用自动切换');
+                          }}
+                          className="w-4 h-4 rounded accent-blue-500 cursor-pointer"
+                        />
+                        <span>启用切卡/切聊天自动切换</span>
+                      </label>
+
+                      <button
+                        id="pws-open-dialog-btn"
+                        onClick={() => {
+                          setIsModalOpen(true);
+                          showToast('已唤出居中「方案管理」界面');
+                        }}
+                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow flex items-center justify-center gap-2"
+                      >
+                        方案管理
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 text-center leading-relaxed">
+                    在酒馆中点击上述 <b>「方案管理」</b> 按钮，即可在屏幕正中呼出全功能自适应配置窗口。
                   </p>
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow transition"
-                  >
-                    重新打开切换管家
-                  </button>
                 </div>
               )}
             </div>

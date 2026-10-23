@@ -19,21 +19,23 @@
     --pws-radius: 12px;
 }
 
-/* 遮罩背景：强制全屏居中 */
+/* 遮罩背景：强制全屏居中、最高层级 */
 #pws-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    background: rgba(8, 10, 15, 0.75);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    box-sizing: border-box;
-    opacity: 0;
-    animation: pws-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 999999 !important;
+    background: rgba(8, 10, 15, 0.78) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    animation: pws-fade-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes pws-fade-in {
@@ -46,23 +48,24 @@
     to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-/* 弹窗主体容器：电脑端居中自适应，最大1060px，高度86vh */
+/* 弹窗主体容器：电脑端居中自适应，最大1040px，高度86vh */
 #pws-modal-container {
-    width: 100%;
-    max-width: 1040px;
-    height: 86vh;
-    max-height: 840px;
-    background: var(--pws-bg);
-    color: var(--pws-text);
-    border: 1px solid var(--pws-border);
-    border-radius: var(--pws-radius);
-    box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
-    animation: pws-scale-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 1040px !important;
+    height: 86vh !important;
+    max-height: 840px !important;
+    background: var(--pws-bg) !important;
+    color: var(--pws-text) !important;
+    border: 1px solid var(--pws-border) !important;
+    border-radius: var(--pws-radius) !important;
+    box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    pointer-events: auto !important;
+    animation: pws-scale-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     font-family: inherit;
 }
 

@@ -204,29 +204,39 @@
 
     // 打开居中、响应式大弹窗
     function openManagerModal() {
-        $('#pws-modal-backdrop').remove();
-        const s = getSettings();
-        if (!s.profiles || s.profiles.length === 0) {
-            s.profiles = [{
-                id: 'prof_' + Date.now(),
-                name: '默认方案',
-                presetName: '',
-                applyPromptToggles: false,
-                promptStates: {},
-                chatWorld: '',
-                entryStates: {},
-                bindings: { chats: [], characters: [] }
-            }];
-        }
+        try {
+            $('#pws-modal-backdrop').remove();
+            const s = getSettings();
+            if (!s.profiles || !Array.isArray(s.profiles) || s.profiles.length === 0) {
+                s.profiles = [{
+                    id: 'prof_' + Date.now(),
+                    name: '默认方案',
+                    presetName: '',
+                    applyPromptToggles: false,
+                    promptStates: {},
+                    chatWorld: '',
+                    entryStates: {},
+                    bindings: { chats: [], characters: [] }
+                }];
+            }
 
-        // 当前选中的方案
-        let currentProfile = s.profiles.find(p => p.id === currentProfileId) || s.profiles[0];
-        currentProfileId = currentProfile.id;
+            // 健壮性检查：确保所有属性完整，避免旧数据结构引发未捕获异常
+            for (const p of s.profiles) {
+                if (!p.bindings) p.bindings = { chats: [], characters: [] };
+                if (!Array.isArray(p.bindings.chats)) p.bindings.chats = [];
+                if (!Array.isArray(p.bindings.characters)) p.bindings.characters = [];
+                if (!p.promptStates || typeof p.promptStates !== 'object') p.promptStates = {};
+                if (!p.entryStates || typeof p.entryStates !== 'object') p.entryStates = {};
+            }
 
-        const { chatId, charKey, charDisplayName } = getCurrentTarget();
+            // 当前选中的方案
+            let currentProfile = s.profiles.find(p => p.id === currentProfileId) || s.profiles[0];
+            currentProfileId = currentProfile.id;
 
-        // 渲染外层框架结构
-        const modalHtml = `
+            const { chatId, charKey, charDisplayName } = getCurrentTarget();
+
+            // 渲染外层框架结构
+            const modalHtml = `
         <div id="pws-modal-backdrop" role="dialog" aria-modal="true">
             <div id="pws-modal-container">
                 <!-- 顶部栏 -->
@@ -918,17 +928,21 @@
         renderSidebar();
         renderEditor();
         updateContextBanner();
+    } catch (err) {
+        console.error('[PWS] 打开方案管理界面异常:', err);
+        showToast('打开方案管理界面失败: ' + err.message, 'error');
     }
+}
 
-    // 在 SillyTavern 右侧扩展面板注入优雅抽屉
+    // 在 SillyTavern 右侧扩展面板注入抽屉
     function initDrawer() {
         if ($('#pws-main-drawer').length) return;
         const s = getSettings();
 
         const drawerHtml = `
         <div id="pws-main-drawer" class="inline-drawer">
-            <div class="inline-drawer-toggle inline-drawer-header">
-                <b>⚡ 智能切换管家</b>
+            <div class="inline-drawer-toggle inline-drawer-header" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; user-select:none;">
+                <b>⚡ 预设条目自动切换</b>
                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
             </div>
             <div class="inline-drawer-content" style="padding:10px; display:flex; flex-direction:column; gap:10px;">
@@ -936,31 +950,58 @@
                     <input type="checkbox" id="pws-glob-enable" ${s.enabled ? 'checked' : ''} />
                     <span>启用切卡/切聊天自动切换</span>
                 </label>
-                <button id="pws-open-dialog-btn" class="menu_button" style="width:100%; font-weight:600; padding:8px 12px;">
-                    ⚙ 打开方案管理中心 (居中全功能)
+                <button id="pws-open-dialog-btn" class="menu_button" style="width:100%; font-weight:600; padding:8px 12px; cursor:pointer; text-align:center;">
+                    方案管理
                 </button>
             </div>
         </div>`;
 
-        const $c = $('#extensions_settings2').length ? $('#extensions_settings2') : $('#extensions_settings');
-        if ($c.length) $c.append(drawerHtml);
-        else if ($('#extensions').length) $('#extensions').append(drawerHtml);
+        const $c = $('#extensions_settings2').length
+            ? $('#extensions_settings2')
+            : ($('#extensions_settings').length ? $('#extensions_settings') : $('#extensions'));
 
-        $('#pws-glob-enable').on('change', function () {
-            s.enabled = $(this).is(':checked');
-            saveSettings();
-        });
-
-        $('#pws-open-dialog-btn').on('click', openManagerModal);
+        if ($c && $c.length) {
+            $c.append(drawerHtml);
+        }
     }
 
-    // 绑定酒馆生命周期
+    // 全局委托事件监听：彻底杜绝动态刷新导致点不开的问题
+    $(document).off('click.pws_drawer_toggle').on('click.pws_drawer_toggle', '#pws-main-drawer .inline-drawer-toggle', function (e) {
+        e.preventDefault();
+        const $drawer = $(this).closest('#pws-main-drawer');
+        const $content = $drawer.find('.inline-drawer-content');
+        $content.slideToggle(180);
+        $(this).find('.inline-drawer-icon').toggleClass('down up');
+    });
+
+    $(document).off('click.pws_open_modal').on('click.pws_open_modal', '#pws-open-dialog-btn, .pws-open-dialog-btn, [data-pws-action="open-modal"]', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openManagerModal();
+    });
+
+    $(document).off('change.pws_glob_toggle').on('change.pws_glob_toggle', '#pws-glob-enable', function () {
+        const s = getSettings();
+        s.enabled = $(this).is(':checked');
+        saveSettings();
+        $('#pws-modal-global-enable').prop('checked', s.enabled);
+    });
+
+    // 绑定酒馆生命周期与周期性注入保护
     jQuery(function () {
         const ctx = getST();
         if (ctx && ctx.eventSource && ctx.eventTypes?.CHAT_CHANGED) {
             ctx.eventSource.on(ctx.eventTypes.CHAT_CHANGED, onChatChanged);
         }
-        setTimeout(initDrawer, 1200);
+        
+        // 初次加载与周期性检测，确保切换扩展菜单后抽屉依然存在且可点击
+        setTimeout(initDrawer, 800);
+        setTimeout(initDrawer, 2000);
+        setInterval(() => {
+            if (!$('#pws-main-drawer').length) {
+                initDrawer();
+            }
+        }, 3000);
     });
 
     // 暴露至全局以便调试或快捷调用
